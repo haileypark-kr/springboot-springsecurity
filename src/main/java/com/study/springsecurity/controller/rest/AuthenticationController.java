@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.study.springsecurity.dto.UserRegisterDto;
-import com.study.springsecurity.service.AccountService;
+import com.study.springsecurity.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -12,7 +12,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthenticationController {
 
-	private final AccountService accountService;
+	private final UserService accountService;
 
 	@PostMapping("/register")
 	public void register(UserRegisterDto registerDto) {

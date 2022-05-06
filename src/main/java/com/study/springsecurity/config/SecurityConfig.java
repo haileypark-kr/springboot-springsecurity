@@ -1,56 +1,71 @@
 package com.study.springsecurity.config;
 
-import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
-import com.study.springsecurity.service.AccountService;
+import com.study.springsecurity.jwt.JwtAccessDeniedHandler;
+import com.study.springsecurity.jwt.JwtAuthenticationEntryPoint;
+import com.study.springsecurity.jwt.JwtProvider;
 
 import lombok.RequiredArgsConstructor;
 
+@RequiredArgsConstructor
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
+@EnableGlobalMethodSecurity(prePostEnabled = true) // 메소드 단위 @PreAuthorized 어노테이션 사용을 위해 추가
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-	private final AccountService accountService;
-	private final PasswordEncoder passwordEncoder;
+	private final JwtSecurityConfig jwtSecurityConfig;
+	private final JwtProvider jwtProvider;
+	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
-	@Override
-	public void configure(WebSecurity web) throws Exception {
-		// static 경로 접근 허용
-		web.ignoring()
-			.requestMatchers(PathRequest.toStaticResources().atCommonLocations());
-		// .antMatchers("/favicon.ico", "/error");
+	@Bean
+	public BCryptPasswordEncoder customPasswordEncoder() {
+		return new BCryptPasswordEncoder();
 	}
 
 	@Override
-	protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-		// spring-security의 userDetailService와 AccountService를 연동하고 passwordEncoder 설정
-		auth.userDetailsService(accountService).passwordEncoder(passwordEncoder);
+	public void configure(WebSecurity web) throws Exception {
+		web.ignoring()
+			.antMatchers("/h2-console/**"
+				, "/favicon.ico"
+			);
 	}
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
+		http
+			.csrf().disable()
 
-		http.csrf().disable();
+			.exceptionHandling()
+			.authenticationEntryPoint(jwtAuthenticationEntryPoint)
+			.accessDeniedHandler(jwtAccessDeniedHandler)
 
-		http.authorizeRequests()
-			.mvcMatchers("/login", "/register").permitAll()
+			.and()
+			.headers()
+			.frameOptions()
+			.sameOrigin()
+
+			.and()
+			.sessionManagement()
+			.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 인증 시 세션 사용 X
+
+			.and()
+			.authorizeRequests()
+			.antMatchers("/api/signup").permitAll() // 회원가입
+			.antMatchers("/api/authenticate").permitAll() // 토큰을 받기 위한 API
 			.anyRequest().authenticated()
-		;
 
-		http.formLogin()
-			.loginPage("/login")
-			.defaultSuccessUrl("/index", true);
+			.and()
+			.apply(jwtSecurityConfig); // JWT Filter가 적용된 JWT SecurityConfig 추가
 
-		http.logout()
-			.logoutUrl("/logout")
-			.logoutSuccessUrl("/");
 	}
 }

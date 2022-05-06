@@ -6,11 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import com.study.springsecurity.entity.Account;
+import com.study.springsecurity.entity.User;
 
 @Repository
-public interface AccountRepository extends JpaRepository<Account, Long> {
+public interface UserRepository extends JpaRepository<User, Long> {
 
-	@Query("select u from Account as u where u.userId=?1")
-	Optional<Account> findByUserId(String userId);
+	@Query("select u from User as u where u.userId=?1")
+	Optional<User> findByUserId(String userId);
 }
