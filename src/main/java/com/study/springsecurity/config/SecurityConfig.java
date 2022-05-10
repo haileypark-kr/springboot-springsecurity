@@ -24,7 +24,6 @@ import lombok.RequiredArgsConstructor;
 @EnableGlobalMethodSecurity(prePostEnabled = true) // 메소드 단위 @PreAuthorized 어노테이션 사용을 위해 추가
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-	private final JwtFilter jwtFilter;
 	private final JwtProvider jwtProvider;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
@@ -41,6 +40,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 				"/h2-console/**"
 				, "/favicon.ico"
 				, "/error"
+				, "/api/login"
+				, "/api/signup"
 			);
 	}
 
@@ -69,12 +70,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
 			.and()
 			.authorizeRequests()
-			.antMatchers("/api/signup").permitAll() // 회원가입
-			.antMatchers("/api/login").permitAll() // 로그인 API
+			// .antMatchers("/api/signup").permitAll() // 회원가입
+			// .antMatchers("/api/login").permitAll() // 로그인 API
 			.anyRequest().authenticated()
 
 			.and()
-			.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+			.addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
 
 	}
 }
