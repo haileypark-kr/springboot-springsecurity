@@ -15,24 +15,20 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * The type Jwt filter.
- */
+@Component
 @Slf4j
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
 
 	private final JwtProvider jwtProvider;
 
-	/**
-	 * The constant AUTHORIZATION_HEADER.
-	 */
 	public static String AUTHORIZATION_HEADER = "Authorization";
 
 	/**
