@@ -9,51 +9,59 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.study.springsecurity.jwt.JwtAccessDeniedHandler;
 import com.study.springsecurity.jwt.JwtAuthenticationEntryPoint;
+import com.study.springsecurity.jwt.JwtFilter;
 import com.study.springsecurity.jwt.JwtProvider;
 
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity(debug = true)
 @EnableGlobalMethodSecurity(prePostEnabled = true) // 메소드 단위 @PreAuthorized 어노테이션 사용을 위해 추가
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-	private final JwtSecurityConfig jwtSecurityConfig;
 	private final JwtProvider jwtProvider;
 	private final JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
 	private final JwtAccessDeniedHandler jwtAccessDeniedHandler;
 
 	@Bean
-	public BCryptPasswordEncoder customPasswordEncoder() {
+	public BCryptPasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
 
 	@Override
 	public void configure(WebSecurity web) throws Exception {
 		web.ignoring()
-			.antMatchers("/h2-console/**"
+			.antMatchers(
+				"/h2-console/**"
 				, "/favicon.ico"
+				, "/error"
 			);
 	}
 
 	@Override
 	protected void configure(HttpSecurity http) throws Exception {
 		http
+			// token을 사용하는 방식이기 때문에 csrf를 disable합니다.
 			.csrf().disable()
 
 			.exceptionHandling()
 			.authenticationEntryPoint(jwtAuthenticationEntryPoint)
 			.accessDeniedHandler(jwtAccessDeniedHandler)
 
+			// enable h2-console
+			// X-Frame-Options 을 통해 브라우저가 <frame>, <iframe> 혹은 <object> 태그를 렌더링 해야하는지 막아야하는지를 알려준다.
+			// 아래 설정은 same origin에 해당하는 frame 내에서 표시를 허용한다.
 			.and()
 			.headers()
 			.frameOptions()
 			.sameOrigin()
 
+			// 세션을 사용하지 않기 때문에 STATELESS로 설정
 			.and()
 			.sessionManagement()
 			.sessionCreationPolicy(SessionCreationPolicy.STATELESS) // 인증 시 세션 사용 X
@@ -61,11 +69,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 			.and()
 			.authorizeRequests()
 			.antMatchers("/api/signup").permitAll() // 회원가입
-			.antMatchers("/api/authenticate").permitAll() // 토큰을 받기 위한 API
+			.antMatchers("/api/login").permitAll() // 로그인 API
 			.anyRequest().authenticated()
 
 			.and()
-			.apply(jwtSecurityConfig); // JWT Filter가 적용된 JWT SecurityConfig 추가
+			.addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class);
+		// .apply(new JwtSecurityConfig(jwtProvider)); // JWT Filter가 적용된 JWT SecurityConfig 추가
 
 	}
 }

@@ -38,6 +38,12 @@ public class User {
 	@Column
 	private String lastLogin;
 
+	@Column
+	private String role;
+
+	@Column
+	private Boolean isUsed;
+
 	@ManyToMany
 	@JoinTable(
 		name = "user_authority",
@@ -45,9 +51,6 @@ public class User {
 		inverseJoinColumns = {@JoinColumn(name = "authority_id", referencedColumnName = "authority_id")}
 	)
 	private Set<Authority> authorities = new HashSet<>();
-
-	@Column
-	private String role;
 
 	public User() {
 	}
@@ -59,5 +62,6 @@ public class User {
 		this.name = name;
 		this.lastLogin = lastLogin;
 		this.role = role;
+		this.isUsed = true;
 	}
 }

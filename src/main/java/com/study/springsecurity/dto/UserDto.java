@@ -4,17 +4,17 @@ import lombok.Builder;
 import lombok.Data;
 
 @Data
-public class UserRegisterDto {
+public class UserDto {
 	private String userId;
 	private String password;
 	private String name;
 	private String role;
 
-	public UserRegisterDto() {
+	public UserDto() {
 	}
 
 	@Builder
-	public UserRegisterDto(String userId, String password, String name, String role) {
+	public UserDto(String userId, String password, String name, String role) {
 		this.userId = userId;
 		this.password = password;
 		this.name = name;
